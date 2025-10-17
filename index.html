@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pentadbiran Mahad Tahfiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        .custom-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        /* Device-specific responsive styles */
+        .device-mobile {
+            font-size: 14px;
+        }
+        .device-mobile .container {
+            padding: 8px;
+        }
+        .device-mobile .nav-btn {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        .device-mobile .form-grid {
+            grid-template-columns: 1fr;
+        }
+        .device-mobile .table-container {
+            font-size: 12px;
+        }
+        
+        .device-tablet {
+            font-size: 15px;
+        }
+        .device-tablet .container {
+            padding: 12px;
+        }
+        .device-tablet .nav-btn {
+            padding: 10px 16px;
+            font-size: 13px;
+        }
+        .device-tablet .form-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .device-laptop {
+            font-size: 16px;
+        }
+        .device-laptop .container {
+            padding: 16px;
+        }
+        .device-laptop .nav-btn {
+            padding: 12px 20px;
+            font-size: 14px;
+        }
+        .device-laptop .form-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .device-desktop {
+            font-size: 18px;
+        }
+        .device-desktop .container {
+            padding: 20px;
+        }
+        .device-desktop .nav-btn {
+            padding: 14px 24px;
+            font-size: 16px;
+        }
+        .device-desktop .form-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        
+        /* Screen size indicator */
+        .screen-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .screen-indicator.hidden {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        /* Custom wallpaper styles */
+        .custom-wallpaper {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        .wallpaper-overlay {
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Logo preview styles */
+        .logo-preview {
+            max-width: 100px;
+            max-height: 100px;
+            object-fit: contain;
+            border: 2px dashed #ccc;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .print-area, .print-area * {
+                visibility: visible;
+            }
+            
+            .print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white !important;
+            }
+            
+            .print-header {
+                text-align: center;
+                margin-bottom: 30px;
+                border-bottom: 2px solid #000;
+                padding-bottom: 20px;
+            }
+            
+            .print-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            
+            .print-table th,
+            .print-table td {
+                border: 1px solid #000;
+                padding: 8px;
+                text-align: left;
+                font-size: 12px;
+            }
+            
+            .print-table th {
+                background-color: #f0f0f0 !important;
+                font-weight: bold;
+            }
+            
+            .print-footer {
+                margin-top: 30px;
+                text-align: right;
+                font-size: 12px;
+            }
+            
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen custom-bg">
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <!-- Screen Size Indicator -->
+    <div id="screen-indicator" class="screen-indicator">
+        <span id="device-type">🖥️ Desktop</span> | 
+        <span id="screen-size">1920x1080</span>
+    </div>
+
+    <!-- Password Recovery Modal -->
+    <div id="password-recovery-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Pemulihan Kata Laluan</h3>
+                    <button id="close-recovery-modal" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Step 1: Username -->
+                <div id="recovery-step-1" class="recovery-step">
+                    <h4 class="text-md font-medium text-gray-800 mb-3">Langkah 1: Pengesahan Identiti</h4>
+                    <div class="mb-4">
+                        <label for="recovery-username" class="block text-sm font-medium text-gray-700 mb-2">Nama Pengguna</label>
+                        <input type="text" id="recovery-username" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <button id="verify-username" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+                        Seterusnya
+                    </button>
+                </div>
+                
+                <!-- Step 2: Security Questions -->
+                <div id="recovery-step-2" class="recovery-step hidden">
+                    <h4 class="text-md font-medium text-gray-800 mb-3">Langkah 2: Soalan Keselamatan</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Apakah nama sekolah rendah pertama anda?</label>
+                            <input type="text" id="security-answer-1" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Apakah nama ibu anda?</label>
+                            <input type="text" id="security-answer-2" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Apakah bandar kelahiran anda?</label>
+                            <input type="text" id="security-answer-3" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <div class="flex space-x-3 mt-4">
+                        <button id="back-to-step-1" class="flex-1 bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200">
+                            Kembali
+                        </button>
+                        <button id="verify-security" class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+                            Sahkan
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 3: New Password -->
+                <div id="recovery-step-3" class="recovery-step hidden">
+                    <h4 class="text-md font-medium text-gray-800 mb-3">Langkah 3: Kata Laluan Baru</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="new-recovery-password" class="block text-sm font-medium text-gray-700 mb-2">Kata Laluan Baru</label>
+                            <input type="password" id="new-recovery-password" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="confirm-recovery-password" class="block text-sm font-medium text-gray-700 mb-2">Sahkan Kata Laluan</label>
+                            <input type="password" id="confirm-recovery-password" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <div class="flex space-x-3 mt-4">
+                        <button id="back-to-step-2" class="flex-1 bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200">
+                            Kembali
+                        </button>
+                        <button id="reset-password" class="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200">
+                            Reset Kata Laluan
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Success -->
+                <div id="recovery-step-4" class="recovery-step hidden">
+                    <div class="text-center">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                            <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <h4 class="text-lg font-medium text-gray-900 mb-2">Berjaya!</h4>
+                        <p class="text-sm text-gray-600 mb-4">Kata laluan anda telah berjaya dikemaskini. Anda boleh log masuk dengan kata laluan baru.</p>
+                        <button id="close-recovery-success" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md fade-in">
+            <div class="text-center mb-8">
+                <div id="logo-container" class="mb-4">
+                    <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-blue-500 rounded-full mx-auto flex items-center justify-center">
+                        <span class="text-white text-2xl font-bold">MT</span>
+                    </div>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800">Sistem Pentadbiran</h1>
+                <p class="text-gray-600">Mahad Tahfiz Al-Quran</p>
+            </div>
+            
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Nama Pengguna</label>
+                    <input type="text" id="username" name="username" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Kata Laluan</label>
+                    <input type="password" id="password" name="password" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+                    Log Masuk
+                </button>
+                
+                <div class="text-center">
+                    <button type="button" id="forgot-password" class="text-blue-600 hover:text-blue-800 text-sm">
+                        Lupa Kata Laluan?
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Print Area (Hidden) -->
+    <div id="print-area" class="print-area hidden">
+        <!-- Print content will be dynamically inserted here -->
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="hidden min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="flex items-center justify-between px-6 py-4">
+                <div class="flex items-center space-x-4">
+                    <div id="dashboard-logo" class="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                        <span class="text-white font-bold">MT</span>
+                    </div>
+                    <h1 class="text-xl font-semibold text-gray-800">Sistem Pentadbiran Mahad Tahfiz Al-Quran</h1>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Update Notifications -->
+                    <div class="relative">
+                        <button id="updates-btn" class="relative bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-200 flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 19h6v-7a1 1 0 011-1h4a1 1 0 011 1v7h6M4 10l8-6 8 6v9a1 1 0 01-1 1H5a1 1 0 01-1-1v-9z"></path>
+                            </svg>
+                            <span>Kemaskini</span>
+                            <span id="updates-badge" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">0</span>
+                        </button>
+                        
+                        <!-- Updates Dropdown -->
+                        <div id="updates-dropdown" class="hidden absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border z-50">
+                            <div class="p-4 border-b">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-semibold text-gray-800">Kemaskini Sistem</h3>
+                                    <div class="flex space-x-2">
+                                        <button id="mark-all-read" class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition duration-200">
+                                            Tandai Semua Dibaca
+                                        </button>
+                                        <button id="clear-all-updates" class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded hover:bg-red-200 transition duration-200">
+                                            Padam Semua
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-4 mt-2 text-sm text-gray-600">
+                                    <span id="total-updates-count">0 kemaskini</span>
+                                    <span id="unread-updates-count">0 belum dibaca</span>
+                                </div>
+                            </div>
+                            
+                            <div id="updates-list" class="max-h-80 overflow-y-auto">
+                                <div class="p-4 text-center text-gray-500 text-sm">
+                                    Tiada kemaskini baharu
+                                </div>
+                            </div>
+                            
+                            <div class="p-3 border-t bg-gray-50">
+                                <div class="flex items-center justify-between text-xs text-gray-600">
+                                    <span>Kemaskini automatik: <span id="auto-update-status">Aktif</span></span>
+                                    <button id="toggle-auto-updates" class="text-blue-600 hover:text-blue-800">
+                                        Tetapan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-right">
+                        <div id="current-user" class="text-gray-800 font-medium">Admin</div>
+                        <div id="current-user-role" class="text-xs text-gray-500">Admin</div>
+                    </div>
+                    <button id="logout-btn" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition duration-200">
+                        Log Keluar
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="bg-gray-800 text-white">
+            <div class="px-6 py-4">
+                <div class="flex space-x-8 overflow-x-auto">
+                    <button class="nav-btn whitespace-nowrap px-3 py-2 rounded-md bg-gray-700" data-section="hafazan">Rekod Hafazan</button>
+                    <button class="nav-btn whitespace-nowrap px-3 py-2 rounded-md hover:bg-gray-700" data-section="prestasi">Prestasi Harian</button>
+                    <button class="nav-btn whitespace-nowrap px-3 py-2 rounded-md hover:bg-gray-700" data-section="disiplin">Rekod Disiplin</button>
+                    <button class="nav-btn whitespace-nowrap px-3 py-2 rounded-md hover:bg-gray-700" data-section="pencapaian">Pengiktirafan</button>
+                    <button class="nav-btn whitespace-nowrap px-3 py-2 rounded-md hover:bg-gray-700" data-section="aktiviti">Aktiviti Pelajar</button>
+                    <butt
